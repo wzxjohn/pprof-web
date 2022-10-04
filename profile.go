@@ -94,7 +94,7 @@ func handleHome(rsp http.ResponseWriter, req *http.Request) {
 			rsp.Write([]byte("fetch failed.\n" + err.Error()))
 			return
 		}
-		http.Redirect(rsp, req, "./"+profileId, http.StatusFound)
+		http.Redirect(rsp, req, "./"+profileId+"/", http.StatusFound)
 		return
 	}
 
