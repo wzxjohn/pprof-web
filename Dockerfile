@@ -1,0 +1,13 @@
+FROM golang:latest as Builder
+
+WORKDIR /pprof-web
+COPY . .
+ENV CGO_ENABLED=0
+RUN go build && chmod +x pprof-web
+
+FROM alpine:latest
+
+RUN apk add --no-cache graphviz
+COPY --from=Builder /pprof-web/pprof-web /
+
+CMD ["/pprof-web"]
