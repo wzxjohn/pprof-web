@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/google/pprof/driver"
@@ -24,7 +23,6 @@ const (
 var (
 	profileIdPathHandleMap sync.Map
 	idProfileIdMap         sync.Map
-	id                     atomic.Int32
 )
 
 type profileProxy struct {
@@ -129,16 +127,16 @@ func handleProfile(rsp http.ResponseWriter, req *http.Request, profileId string,
 }
 
 func newProfile(profileId, ip string, port, seconds int, profileType string) error {
-	_id := id.Add(1)
+	_id := nextId()
 	log.Println("profile ", profileId, "assigned id ", _id)
-	idProfileIdMap.Store(int(_id), profileId)
+	idProfileIdMap.Store(_id, profileId)
 
 	profilePath, err := fetchProfile(profileId, ip, port, seconds, profileType)
 	if err != nil {
 		return err
 	}
 
-	o := newOption(int(_id), ip, port, profilePath)
+	o := newOption(_id, ip, port, profilePath)
 	err = driver.PProf(o)
 	if err != nil {
 		return err
@@ -153,9 +151,9 @@ func tryLoadProfile(profileId string) bool {
 		return false
 	}
 
-	_id := id.Add(1)
+	_id := nextId()
 	log.Println("profile ", profileId, "assigned id ", _id)
-	idProfileIdMap.Store(int(_id), profileId)
+	idProfileIdMap.Store(_id, profileId)
 
 	profilePath := getProfilePath(profileId)
 	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
@@ -163,7 +161,7 @@ func tryLoadProfile(profileId string) bool {
 		return false
 	}
 
-	o := newOption(int(_id), ip, port, profilePath)
+	o := newOption(_id, ip, port, profilePath)
 	err := driver.PProf(o)
 	if err != nil {
 		return false
