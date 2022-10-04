@@ -13,6 +13,7 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 
 - [x] Fetch remote CPU profile
 - [x] Load profile from local tmp storage
+- [ ] Auto delete inactive profile
 - [ ] Better log
 - [x] Dockerfile
 - [ ] Helm chart
