@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	profileIdPathHandleMap = map[string]map[string]http.Handler{}
+	profileIdPathHandleMap sync.Map
 	idProfileIdMap         sync.Map
 	id                     atomic.Int32
 )
@@ -52,14 +52,14 @@ func (p *profileProxy) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var pathHandleMap map[string]http.Handler
+	var pathHandleMap any
 	var ok bool
-	if pathHandleMap, ok = profileIdPathHandleMap[profileId]; !ok {
+	if pathHandleMap, ok = profileIdPathHandleMap.Load(profileId); !ok {
 		if !tryLoadProfile(profileId) {
 			return
 		}
 	}
-	handleProfile(rsp, req, profileId, pathHandleMap)
+	handleProfile(rsp, req, profileId, pathHandleMap.(map[string]http.Handler))
 	return
 
 }
@@ -228,7 +228,7 @@ func pprofHTTPServer(args *driver.HTTPServerArgs) error {
 	profileId, ok := idProfileIdMap.Load(args.Port)
 	if ok {
 		log.Println("match id ", args.Port, "to profile id ", profileId)
-		profileIdPathHandleMap[profileId.(string)] = args.Handlers
+		profileIdPathHandleMap.Store(profileId.(string), args.Handlers)
 	}
 	return nil
 }
