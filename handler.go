@@ -11,6 +11,9 @@ type webHandler struct {
 
 func (p *webHandler) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
 	switch req.URL.Path {
+	case "/health":
+		handleHealth(rsp, req)
+		return
 	case "/":
 		handleProfileHome(rsp, req)
 		return
