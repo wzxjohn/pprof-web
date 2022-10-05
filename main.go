@@ -25,7 +25,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-	} else {
+	} else if err != nil {
 		panic(err)
 	}
 
