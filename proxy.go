@@ -46,6 +46,7 @@ func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 	if endpoint == "/debug/pprof" {
 		req.URL.Path += "/"
 		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)
+		return
 	}
 	if _, ok := allowedEndpoint[endpoint]; !ok {
 		log.Println("endpoint not allowed: ", endpoint)
