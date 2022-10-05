@@ -7,6 +7,10 @@
 !go.sum
 !*.md
 !.gitignore
+!.dockerignore
+!.helmignore
+!*.yaml
+!*.tpl
 
 .idea
 go.work

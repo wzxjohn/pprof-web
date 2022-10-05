@@ -16,7 +16,7 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 - [ ] Auto delete inactive profile
 - [ ] Better log
 - [x] Dockerfile
-- [ ] Helm chart
+- [x] Helm chart
 - [ ] Unit test
 - [ ] Support memory profile
 - [ ] Improve web UI
