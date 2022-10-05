@@ -56,6 +56,10 @@ func (p *profileProxy) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
 		if !tryLoadProfile(profileId) {
 			return
 		}
+		if pathHandleMap, ok = profileIdPathHandleMap.Load(profileId); !ok {
+			log.Println("handle still missing after load profile ", profileId)
+			return
+		}
 	}
 	handleProfile(rsp, req, profileId, pathHandleMap.(map[string]http.Handler))
 	return
@@ -173,9 +177,9 @@ func newOption(id int, ip string, port int, profilePath string) *driver.Options 
 	return &driver.Options{
 		Flagset: &webFlagSet{
 			strings: map[string]string{"http": "0.0.0.0:" + strconv.Itoa(id)},
-			args:    []string{ip + ":" + strconv.Itoa(port), profilePath},
+			args:    []string{profilePath},
 		},
-		Obj:        &webObjTool{},
+		Sym:        &webSym{Address: ip + ":" + strconv.Itoa(port)},
 		UI:         &webUI{},
 		HTTPServer: pprofHTTPServer,
 	}
