@@ -31,7 +31,7 @@ func main() {
 
 	log.Printf("start http server at %s using tmp dir %s", listenAddress, tmpPath)
 
-	err := http.ListenAndServe(listenAddress, &profileProxy{})
+	err := http.ListenAndServe(listenAddress, &webHandler{})
 	if err != nil {
 		panic(err)
 	}

@@ -7,7 +7,7 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 # Goals
 
 - ONLY use official pprof tool as go mod dependency
-- Implement interfaces in official pprof tool as least as possible
+- Implement interfaces in official pprof tool as little as possible
 
 # Feature
 
@@ -20,6 +20,7 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 - [ ] Unit test
 - [ ] Support memory profile
 - [ ] Improve web UI
+- [x] Proxy for all pprof endpoint
 
 # Stargazers over time
 

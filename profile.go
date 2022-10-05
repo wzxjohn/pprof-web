@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -25,56 +26,24 @@ var (
 	idProfileIdMap         sync.Map
 )
 
-type profileProxy struct {
-}
-
-func (p *profileProxy) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
-	if req.URL.Path == "/" {
-		handleHome(rsp, req)
-		return
-	}
-
-	if req.URL.Path == "/favicon.ico" {
-		rsp.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	pathParts := strings.Split(req.URL.Path, "/")
-	var profileId string
-	if len(pathParts) >= 2 {
-		profileId = pathParts[1]
-	}
-	if len(profileId) <= 0 {
-		rsp.Header()
-		http.Redirect(rsp, req, "/", http.StatusFound)
-		return
-	}
-
-	var pathHandleMap any
-	var ok bool
-	if pathHandleMap, ok = profileIdPathHandleMap.Load(profileId); !ok {
-		if !tryLoadProfile(profileId) {
-			return
-		}
-		if pathHandleMap, ok = profileIdPathHandleMap.Load(profileId); !ok {
-			log.Println("handle still missing after load profile ", profileId)
-			return
-		}
-	}
-	handleProfile(rsp, req, profileId, pathHandleMap.(map[string]http.Handler))
-	return
-
-}
-
-func handleHome(rsp http.ResponseWriter, req *http.Request) {
+func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 	ip := req.URL.Query().Get("ip")
 	portStr := req.URL.Query().Get("port")
-	secondsStr := req.URL.Query().Get("seconds")
+	secondsStr := req.URL.Query().Get(secondsQueryParam)
 	profileType := req.URL.Query().Get("type")
 	if len(ip) > 0 && len(portStr) > 0 {
+		netIp := net.ParseIP(ip)
+		if netIp == nil {
+			rsp.WriteHeader(http.StatusBadRequest)
+			rsp.Write([]byte("invalid ip"))
+			return
+		}
+
 		var port int
 		port, err := strconv.Atoi(portStr)
 		if err != nil {
+			rsp.WriteHeader(http.StatusBadRequest)
+			rsp.Write([]byte("invalid port"))
 			return
 		}
 
@@ -84,7 +53,12 @@ func handleHome(rsp http.ResponseWriter, req *http.Request) {
 		} else {
 			seconds, err = strconv.Atoi(secondsStr)
 			if err != nil {
+				rsp.WriteHeader(http.StatusBadRequest)
+				rsp.Write([]byte("invalid seconds"))
 				return
+			}
+			if seconds > 60 {
+				seconds = 60
 			}
 		}
 		if profileType == "" {
@@ -93,6 +67,7 @@ func handleHome(rsp http.ResponseWriter, req *http.Request) {
 		profileId := newProfileId(ip, port)
 		err = newProfile(profileId, ip, port, seconds, profileType)
 		if err != nil {
+			rsp.WriteHeader(http.StatusInternalServerError)
 			rsp.Write([]byte("fetch failed.\n" + err.Error()))
 			return
 		}
@@ -121,6 +96,11 @@ func handleHome(rsp http.ResponseWriter, req *http.Request) {
 }
 
 func handleProfile(rsp http.ResponseWriter, req *http.Request, profileId string, pathHandle map[string]http.Handler) {
+	if req.URL.Path[len(req.URL.Path)-1] != '/' {
+		req.URL.Path += "/"
+		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)
+		return
+	}
 	realPath := req.URL.Path[len(profileId)+1:]
 	var handle http.Handler
 	var ok bool
@@ -201,12 +181,11 @@ func fetchProfile(profileId, ip string, port, seconds int, profileType string) (
 		log.Println("http fetch: ", err)
 		return "", err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		defer resp.Body.Close()
 		log.Println("http fetch get status: ", resp.StatusCode)
 		return "", fmt.Errorf("wrong http status: %d", resp.StatusCode)
 	}
-	defer resp.Body.Close()
 
 	profilePath := getProfilePath(profileId)
 	f, err := os.Create(profilePath)
