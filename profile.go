@@ -96,12 +96,12 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 }
 
 func handleProfile(rsp http.ResponseWriter, req *http.Request, profileId string, pathHandle map[string]http.Handler) {
-	if req.URL.Path[len(req.URL.Path)-1] != '/' {
+	realPath := req.URL.Path[len(profileId)+1:]
+	if realPath == "" {
 		req.URL.Path += "/"
 		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)
 		return
 	}
-	realPath := req.URL.Path[len(profileId)+1:]
 	var handle http.Handler
 	var ok bool
 	if handle, ok = pathHandle[realPath]; !ok {
