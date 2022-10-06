@@ -1,0 +1,20 @@
+{{- if .Values.pv.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "pprof.web.fullName" . }}-pvc
+  labels:
+    {{- include "pprof.web.labels" . | nindent 4 }}
+    pvc: {{ include "pprof.web.fullName" . }}-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: "{{ .Values.pv.storageClassName }}"
+  resources:
+    requests:
+      storage: {{ .Values.pv.storageCapacity  }}
+  selector:
+    matchLabels:
+      {{- include "pprof.web.selectorLabels" . | nindent 6 }}
+      pv: {{ .Release.Name }}-{{ include "pprof.web.fullName" . }}-pv
+{{- end }}

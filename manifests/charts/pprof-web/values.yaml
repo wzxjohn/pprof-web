@@ -34,5 +34,12 @@ nodeSelector: { }
 tolerations: [ ]
 affinity: { }
 
+pv:
+  enabled: false
+  storageClassName: ""
+  storageCapacity: 10Gi
+  hostPath: { }
+  config: { }
+
 config:
   tempPath: "/tmp/pprof-web"

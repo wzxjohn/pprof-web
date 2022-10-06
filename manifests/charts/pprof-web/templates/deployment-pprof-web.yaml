@@ -36,6 +36,11 @@ spec:
             - name: {{ $key }}
               value: {{ $value }}
         {{- end }}
+          {{- if .Values.pv.enabled }}
+          volumeMounts:
+            - mountPath: /tmp/pprof-web # 同步目标目录
+              name: tmp
+          {{- end }}
           livenessProbe:
             tcpSocket:
               port: {{ .Values.containerPort }}
@@ -43,7 +48,7 @@ spec:
             periodSeconds: {{ .Values.liveness.periodSeconds }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.config.contextPath }}/health
+              path: /health
               port: {{ .Values.containerPort }}
             initialDelaySeconds: {{ .Values.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.readiness.periodSeconds }}
@@ -60,4 +65,11 @@ spec:
     {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.pv.enabled }}
+      volumes:
+        - persistentVolumeClaim:
+            claimName: {{ include "pprof.web.fullName" . }}-pvc
+            readOnly: false
+          name: tmp
     {{- end }}

@@ -1,0 +1,22 @@
+{{- if .Values.pv.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Release.Name }}-{{ include "pprof.web.fullName" . }}-pv
+  labels:
+    {{- include "pprof.web.labels" . | nindent 4 }}
+    namespace: "{{ .Release.Namespace }}"
+    pv: {{ .Release.Name }}-{{ include "pprof.web.fullName" . }}-pv
+spec:
+  capacity:
+    storage: {{ .Values.pv.storageCapacity }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  {{- if .Values.pv.config }}
+  {{- toYaml .Values.pv.config | nindent 2 }}
+  {{- else if .Values.pv.hostPath }}
+  hostPath:
+    {{- toYaml .Values.pv.hostPath | nindent 4 }}
+  {{- end }}
+{{- end }}
