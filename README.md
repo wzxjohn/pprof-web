@@ -11,7 +11,6 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 - ONLY use official pprof tool as go mod dependency
 - Implement interfaces in official pprof tool as little as possible
 
-
 # Feature
 
 - [x] Fetch remote CPU profile
@@ -24,6 +23,30 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 - [ ] Support memory profile
 - [ ] Improve web UI
 - [x] Proxy for all pprof endpoint
+
+# Usage
+
+## Nginx proxy as sub folder
+
+Be careful of the `proxy_read_timeout` option.
+Because server cannot send any response data during profile,
+this option must larger than max profile seconds (usually 60s).
+
+```nginx
+location /cluster-1/ {
+    rewrite ^/cluster-1(/.*)$ $1 break;
+    proxy_redirect / /cluster-1/;
+    proxy_read_timeout 120s;
+    proxy_pass http://1.1.1.1:8080/;
+}
+
+location /cluster-2/ {
+    rewrite ^/cluster-2(/.*)$ $1 break;
+    proxy_redirect / /cluster-2/;
+    proxy_read_timeout 120s;
+    proxy_pass http://2.2.2.2:8080/;
+}
+```
 
 # Stargazers over time
 
