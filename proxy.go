@@ -35,7 +35,7 @@ var (
 func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 	pathParts := strings.Split(req.URL.Path, "/")
 	var ipStr, portStr string
-	if len(pathParts) < 6 {
+	if len(pathParts) < 4 {
 		log.Println("missing proxy endpoint: ", req.URL.Path)
 		rsp.WriteHeader(http.StatusBadRequest)
 		return
@@ -43,6 +43,11 @@ func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 	ipStr = pathParts[2]
 	portStr = pathParts[3]
 	endpoint := req.URL.Path[8+len(ipStr)+len(portStr):]
+	if endpoint == "" {
+		req.URL.Path += "/debug/pprof/"
+		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)
+		return
+	}
 	if endpoint == "/debug/pprof" {
 		req.URL.Path += "/"
 		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)
