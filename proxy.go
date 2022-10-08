@@ -43,7 +43,7 @@ func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 	ipStr = pathParts[2]
 	portStr = pathParts[3]
 	endpoint := req.URL.Path[8+len(ipStr)+len(portStr):]
-	if endpoint == "" {
+	if endpoint == "" || endpoint == "/" {
 		req.URL.Path += "/debug/pprof/"
 		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)
 		return
