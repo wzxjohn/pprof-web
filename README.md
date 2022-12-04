@@ -20,7 +20,8 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 - [x] Dockerfile
 - [x] Helm chart
 - [ ] Unit test
-- [ ] Support memory profile
+- [x] Support heap profile
+- [x] Support goroutine profile
 - [ ] Improve web UI
 - [x] Proxy for all pprof endpoint
 
