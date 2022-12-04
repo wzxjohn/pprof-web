@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -16,9 +17,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// ProfileType TODO
+type ProfileType uint8
+
 const (
-	ProfileTypeCPU    = "CPU"
-	ProfileTypeMemory = "MEM"
+	// ProfileTypeCPU TODO
+	ProfileTypeCPU ProfileType = iota
+	// ProfileTypeHeap TODO
+	ProfileTypeHeap
+	// ProfileTypeGoroutine TODO
+	ProfileTypeGoroutine
 )
 
 var (
@@ -30,7 +38,7 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 	ip := req.URL.Query().Get("ip")
 	portStr := req.URL.Query().Get("port")
 	secondsStr := req.URL.Query().Get(secondsQueryParam)
-	profileType := req.URL.Query().Get("type")
+	profileTypeStr := req.URL.Query().Get("type")
 	if len(ip) > 0 && len(portStr) > 0 {
 		netIp := net.ParseIP(ip)
 		if netIp == nil {
@@ -61,10 +69,19 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 				seconds = 60
 			}
 		}
-		if profileType == "" {
+		profileType := ProfileTypeCPU
+		switch profileTypeStr {
+		case "cpu":
 			profileType = ProfileTypeCPU
+		case "heap":
+			profileType = ProfileTypeHeap
+		case "goroutine":
+			profileType = ProfileTypeGoroutine
+		default:
+			rsp.WriteHeader(http.StatusBadRequest)
+			rsp.Write([]byte("wrong profile type"))
 		}
-		profileId := newProfileId(ip, port)
+		profileId := newProfileId(ip, port, profileType)
 		err = newProfile(profileId, ip, port, seconds, profileType)
 		if err != nil {
 			rsp.WriteHeader(http.StatusInternalServerError)
@@ -81,14 +98,35 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 </head>
 <body>
 <form action="./">
+<div>
 <label for="ip">IP:</label><br>
 <input type="text" id="ip" name="ip" size="20" placeholder="10.0.0.1" autofocus required><br>
+</div>
+<div>
 <label for="port">Port:</label><br>
 <input type="number" id="port" name="port" size="20" placeholder="8000" min="1" max="65535" required><br>
+</div>
+<div>
 <label for="seconds">Seconds:</label><br>
 <input type="number" id="seconds" name="seconds" size="20" placeholder="30" min="1" max="60"><br>
+</div>
+<div>
+<input type="radio" id="cpu"
+     name="type" value="cpu">
+    <label for="cpu">CPU</label>
+
+    <input type="radio" id="heap"
+     name="type" value="heap">
+    <label for="heap">heap</label>
+
+    <input type="radio" id="goroutine"
+     name="type" value="goroutine">
+    <label for="goroutine">goroutine</label>
+</div>
 <br>
+<div>
 <input type="submit" value="Profile!" onClick="this.form.submit(); this.disabled=true; this.value='Profiling…';">
+</div>
 </form>
 </body>
 </html>`))
@@ -110,7 +148,7 @@ func handleProfile(rsp http.ResponseWriter, req *http.Request, profileId string,
 	handle.ServeHTTP(rsp, req)
 }
 
-func newProfile(profileId, ip string, port, seconds int, profileType string) error {
+func newProfile(profileId, ip string, port, seconds int, profileType ProfileType) error {
 	_id := nextId()
 	log.Println("profile ", profileId, "assigned id ", _id)
 	idProfileIdMap.Store(_id, profileId)
@@ -165,13 +203,22 @@ func newOption(id int, ip string, port int, profilePath string) *driver.Options 
 	}
 }
 
-func fetchProfile(profileId, ip string, port, seconds int, profileType string) (string, error) {
-	url := fmt.Sprintf("http://%s:%d/debug/pprof/profile?seconds=%d", ip, port, seconds)
+func fetchProfile(profileId, ip string, port, seconds int, profileType ProfileType) (string, error) {
+	var typePart string
 	switch profileType {
-	case ProfileTypeMemory:
-		url += ""
+	case ProfileTypeCPU:
+		typePart = "profile"
 		break
+	case ProfileTypeHeap:
+		typePart = "heap"
+		break
+	case ProfileTypeGoroutine:
+		typePart = "goroutine"
+		break
+	default:
+		return "", errors.New("unknown type")
 	}
+	url := fmt.Sprintf("http://%s:%d/debug/pprof/%s?seconds=%d", ip, port, typePart, seconds)
 
 	client := &http.Client{
 		Timeout: time.Duration(seconds)*time.Second + 5*time.Second,
@@ -214,10 +261,19 @@ func pprofHTTPServer(args *driver.HTTPServerArgs) error {
 	return nil
 }
 
-func newProfileId(ip string, port int) string {
+func newProfileId(ip string, port int, profileType ProfileType) string {
 	u := uuid.NewString()
 	profileId := ip + "_" + strconv.Itoa(port) + "_" + u
-	return profileId
+	switch profileType {
+	case ProfileTypeCPU:
+		return profileId + "_cpu"
+	case ProfileTypeHeap:
+		return profileId + "_heap"
+	case ProfileTypeGoroutine:
+		return profileId + "_goroutine"
+	default:
+		return profileId + "_unknown"
+	}
 }
 
 func parseProfileId(profileId string) (ip string, port int, id string) {
