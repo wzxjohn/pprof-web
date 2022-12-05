@@ -99,33 +99,35 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 <body>
 <form action="./">
 <div>
-<label for="ip">IP:</label><br>
-<input type="text" id="ip" name="ip" size="20" placeholder="10.0.0.1" autofocus required><br>
+	<label for="ip">IP:</label><br>
+	<input type="text" id="ip" name="ip" size="20" placeholder="10.0.0.1" autofocus required><br>
 </div>
 <div>
-<label for="port">Port:</label><br>
-<input type="number" id="port" name="port" size="20" placeholder="8000" min="1" max="65535" required><br>
+	<label for="port">Port:</label><br>
+	<input type="number" id="port" name="port" size="20" placeholder="8000" min="1" max="65535" required><br>
 </div>
 <div>
-<label for="seconds">Seconds:</label><br>
-<input type="number" id="seconds" name="seconds" size="20" placeholder="30" min="1" max="60"><br>
+	<label for="seconds">Seconds:</label><br>
+	<input type="number" id="seconds" name="seconds" size="20" placeholder="30" min="1" max="60" required><br>
 </div>
-<div>
-<input type="radio" id="cpu"
-     name="type" value="cpu">
-    <label for="cpu">CPU</label>
-
-    <input type="radio" id="heap"
-     name="type" value="heap">
-    <label for="heap">heap</label>
-
-    <input type="radio" id="goroutine"
-     name="type" value="goroutine">
-    <label for="goroutine">goroutine</label>
-</div>
+<fieldset>
+	<legend>Select profile type:</legend>
+	<div>
+		<input type="radio" id="cpu" name="type" value="cpu" checked>
+		<label for="cpu">CPU</label>
+	</div>
+	<div>
+		<input type="radio" id="heap" name="type" value="heap">
+		<label for="heap">heap</label>
+	</div>
+	<div>
+		<input type="radio" id="goroutine" name="type" value="goroutine">
+		<label for="goroutine">goroutine</label>
+	</div>
+</fieldset>
 <br>
 <div>
-<input type="submit" value="Profile!" onClick="this.form.submit(); this.disabled=true; this.value='Profiling…';">
+	<input type="submit" value="Profile!" onClick="this.form.submit(); this.disabled=true; this.value='Profiling…';">
 </div>
 </form>
 </body>
