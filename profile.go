@@ -43,7 +43,7 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 		netIp := net.ParseIP(ip)
 		if netIp == nil {
 			rsp.WriteHeader(http.StatusBadRequest)
-			rsp.Write([]byte("invalid ip"))
+			_, _ = rsp.Write([]byte("invalid ip"))
 			return
 		}
 
@@ -51,7 +51,7 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 		port, err := strconv.Atoi(portStr)
 		if err != nil {
 			rsp.WriteHeader(http.StatusBadRequest)
-			rsp.Write([]byte("invalid port"))
+			_, _ = rsp.Write([]byte("invalid port"))
 			return
 		}
 
@@ -62,7 +62,7 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 			seconds, err = strconv.Atoi(secondsStr)
 			if err != nil {
 				rsp.WriteHeader(http.StatusBadRequest)
-				rsp.Write([]byte("invalid seconds"))
+				_, _ = rsp.Write([]byte("invalid seconds"))
 				return
 			}
 			if seconds > 60 {
@@ -79,13 +79,13 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 			profileType = ProfileTypeGoroutine
 		default:
 			rsp.WriteHeader(http.StatusBadRequest)
-			rsp.Write([]byte("wrong profile type"))
+			_, _ = rsp.Write([]byte("wrong profile type"))
 		}
 		profileId := newProfileId(ip, port, profileType)
 		err = newProfile(profileId, ip, port, seconds, profileType)
 		if err != nil {
 			rsp.WriteHeader(http.StatusInternalServerError)
-			rsp.Write([]byte("fetch failed.\n" + err.Error()))
+			_, _ = rsp.Write([]byte("fetch failed.\n" + err.Error()))
 			return
 		}
 		http.Redirect(rsp, req, "./"+profileId+"/", http.StatusFound)
@@ -210,6 +210,9 @@ func fetchProfile(profileId, ip string, port, seconds int, profileType ProfileTy
 	switch profileType {
 	case ProfileTypeCPU:
 		typePart = "profile"
+		if seconds <= 0 {
+			seconds = 30
+		}
 		break
 	case ProfileTypeHeap:
 		typePart = "heap"
@@ -220,7 +223,12 @@ func fetchProfile(profileId, ip string, port, seconds int, profileType ProfileTy
 	default:
 		return "", errors.New("unknown type")
 	}
-	url := fmt.Sprintf("http://%s:%d/debug/pprof/%s?seconds=%d", ip, port, typePart, seconds)
+	var url string
+	if seconds == 0 {
+		url = fmt.Sprintf("http://%s:%d/debug/pprof/%s", ip, port, typePart)
+	} else {
+		url = fmt.Sprintf("http://%s:%d/debug/pprof/%s?seconds=%d", ip, port, typePart, seconds)
+	}
 
 	client := &http.Client{
 		Timeout: time.Duration(seconds)*time.Second + 5*time.Second,
