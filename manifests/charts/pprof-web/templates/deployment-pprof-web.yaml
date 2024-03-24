@@ -36,7 +36,7 @@ spec:
             - name: {{ $key }}
               value: {{ $value }}
         {{- end }}
-          {{- if .Values.pv.enabled }}
+          {{- if .Values.pvc.enabled }}
           volumeMounts:
             - mountPath: /tmp/pprof-web # 同步目标目录
               name: tmp
@@ -66,7 +66,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- if .Values.pv.enabled }}
+    {{- if .Values.pvc.enabled }}
       volumes:
         - persistentVolumeClaim:
             claimName: {{ include "pprof.web.fullName" . }}-pvc

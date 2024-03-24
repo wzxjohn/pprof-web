@@ -34,9 +34,18 @@ nodeSelector: { }
 tolerations: [ ]
 affinity: { }
 
+pvc:
+  enabled: false
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: null
+  storageCapacity: 10Gi
+  config: { }
+
 pv:
   enabled: false
-  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
   storageCapacity: 10Gi
   hostPath: { }
   config: { }

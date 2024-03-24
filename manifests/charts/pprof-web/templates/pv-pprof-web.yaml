@@ -10,8 +10,7 @@ metadata:
 spec:
   capacity:
     storage: {{ .Values.pv.storageCapacity }}
-  accessModes:
-    - ReadWriteMany
+  {{- toYaml .Values.pv.accessModes | nindent 2 }}
   persistentVolumeReclaimPolicy: Retain
   {{- if .Values.pv.config }}
   {{- toYaml .Values.pv.config | nindent 2 }}
