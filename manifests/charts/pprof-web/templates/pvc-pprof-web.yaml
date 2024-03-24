@@ -1,4 +1,4 @@
-{{- if .Values.pv.enabled }}
+{{- if .Values.pvc.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -7,16 +7,13 @@ metadata:
     {{- include "pprof.web.labels" . | nindent 4 }}
     pvc: {{ include "pprof.web.fullName" . }}-pvc
 spec:
-  {{- toYaml .Values.pvc.accessModes | nindent 2 }}
-  storageClassName: "{{ .Values.pvc.storageClassName }}"
+  accessModes:
+    {{- toYaml .Values.pvc.accessModes | nindent 4 }}
+  storageClassName: {{ .Values.pvc.storageClassName }}
   resources:
     requests:
       storage: {{ .Values.pvc.storageCapacity  }}
   {{- if .Values.pvc.config }}
   {{- toYaml .Values.pvc.config | nindent 2 }}
   {{- end }}
-  selector:
-    matchLabels:
-      {{- include "pprof.web.selectorLabels" . | nindent 6 }}
-      pv: {{ .Release.Name }}-{{ include "pprof.web.fullName" . }}-pv
 {{- end }}

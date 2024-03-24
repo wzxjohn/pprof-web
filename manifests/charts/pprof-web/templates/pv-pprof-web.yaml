@@ -8,9 +8,10 @@ metadata:
     namespace: "{{ .Release.Namespace }}"
     pv: {{ .Release.Name }}-{{ include "pprof.web.fullName" . }}-pv
 spec:
+  accessModes:
+    {{- toYaml .Values.pv.accessModes | nindent 4 }}
   capacity:
     storage: {{ .Values.pv.storageCapacity }}
-  {{- toYaml .Values.pv.accessModes | nindent 2 }}
   persistentVolumeReclaimPolicy: Retain
   {{- if .Values.pv.config }}
   {{- toYaml .Values.pv.config | nindent 2 }}
