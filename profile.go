@@ -92,44 +92,47 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, _ = rsp.Write([]byte(`<html>
+	_, _ = rsp.Write([]byte(`<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>PProf Proxy</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<form action="./">
-<div>
-	<label for="ip">IP:</label><br>
-	<input type="text" id="ip" name="ip" size="20" placeholder="10.0.0.1" autofocus required><br>
-</div>
-<div>
-	<label for="port">Port:</label><br>
-	<input type="number" id="port" name="port" size="20" placeholder="8000" min="1" max="65535" required><br>
-</div>
-<div>
-	<label for="seconds">Seconds:</label><br>
-	<input type="number" id="seconds" name="seconds" size="20" placeholder="30" min="1" max="60" required><br>
-</div>
-<fieldset>
-	<legend>Select profile type:</legend>
-	<div>
-		<input type="radio" id="cpu" name="type" value="cpu" checked>
-		<label for="cpu">CPU</label>
-	</div>
-	<div>
-		<input type="radio" id="heap" name="type" value="heap">
-		<label for="heap">heap</label>
-	</div>
-	<div>
-		<input type="radio" id="goroutine" name="type" value="goroutine">
-		<label for="goroutine">goroutine</label>
-	</div>
-</fieldset>
-<br>
-<div>
-	<input type="submit" value="Profile!" onClick="this.form.submit(); this.disabled=true; this.value='Profiling…';">
-</div>
-</form>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <form>
+            <div class="mb-4">
+                <label for="ip" class="block text-sm font-medium text-gray-700">IP:</label>
+                <input type="text" id="ip" name="ip" placeholder="10.0.0.1" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="mb-4">
+                <label for="port" class="block text-sm font-medium text-gray-700">Port:</label>
+                <input type="number" id="port" name="port" placeholder="8000" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="mb-4">
+                <label for="seconds" class="block text-sm font-medium text-gray-700">Seconds:</label>
+                <input type="number" id="seconds" name="seconds" placeholder="30" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <fieldset class="mb-4">
+                <legend class="block text-sm font-medium text-gray-700 mb-2">Select profile type:</legend>
+                <div class="flex items-center mb-4">
+                    <input id="cpu" name="type" type="radio" value="cpu" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
+                    <label for="cpu" class="ml-2 block text-sm font-medium text-gray-700">CPU</label>
+                </div>
+                <div class="flex items-center mb-4">
+                    <input id="heap" name="type" type="radio" value="heap" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                    <label for="heap" class="ml-2 block text-sm font-medium text-gray-700">heap</label>
+                </div>
+                <div class="flex items-center mb-4">
+                    <input id="goroutine" name="type" type="radio" value="goroutine" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                    <label for="goroutine" class="ml-2 block text-sm font-medium text-gray-700">goroutine</label>
+                </div>
+            </fieldset>
+            <button type="submit" class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Profile!</button>
+        </form>
+    </div>
 </body>
 </html>`))
 	return
