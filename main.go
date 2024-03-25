@@ -13,6 +13,21 @@ var (
 )
 
 func main() {
+	t := os.Getenv("PPROF_TMP_PATH")
+	if len(t) > 0 {
+		tmpPath = t
+	}
+
+	l := os.Getenv("PPROF_LISTEN_ADDRESS")
+	if len(l) > 0 {
+		listenAddress = l
+	}
+
+	b := os.Getenv("PPROF_BASE_PATH")
+	if len(b) > 0 {
+		basePath = b
+	}
+
 	flag.StringVar(&tmpPath, "t", tmpPath, "")
 	flag.StringVar(&listenAddress, "l", listenAddress, "")
 	flag.StringVar(&basePath, "b", basePath, "")
@@ -39,7 +54,7 @@ func main() {
 		basePath += "/"
 	}
 
-	log.Printf("start http server at %s using tmp dir %s", listenAddress, tmpPath)
+	log.Printf("start http server at %s using tmp dir %s base path %s", listenAddress, tmpPath, basePath)
 
 	err := http.ListenAndServe(listenAddress, &webHandler{})
 	if err != nil {
