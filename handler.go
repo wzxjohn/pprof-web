@@ -9,8 +9,16 @@ import (
 type webHandler struct {
 }
 
+// ServeHTTP 用于HTTP服务
 func (p *webHandler) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
-	switch req.URL.Path {
+	if len(req.URL.Path) < len(basePath) {
+		rsp.Header()
+		http.Redirect(rsp, req, buildPathFromBase("/"), http.StatusFound)
+		return
+	}
+
+	absPath := getPathFromBase(req.URL.Path)
+	switch absPath {
 	case "/health":
 		handleHealth(rsp, req)
 		return
@@ -22,19 +30,19 @@ func (p *webHandler) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if strings.HasPrefix(req.URL.Path, "/proxy/") {
+	if strings.HasPrefix(absPath, "/proxy/") {
 		handleProxy(rsp, req)
 		return
 	}
 
-	pathParts := strings.Split(req.URL.Path, "/")
+	pathParts := strings.Split(absPath, "/")
 	var profileId string
 	if len(pathParts) >= 2 {
 		profileId = pathParts[1]
 	}
 	if len(profileId) <= 0 {
 		rsp.Header()
-		http.Redirect(rsp, req, "/", http.StatusFound)
+		http.Redirect(rsp, req, buildPathFromBase("/"), http.StatusFound)
 		return
 	}
 
@@ -53,5 +61,4 @@ func (p *webHandler) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
 	}
 	handleProfile(rsp, req, profileId, pathHandleMap.(map[string]http.Handler))
 	return
-
 }

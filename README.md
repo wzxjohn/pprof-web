@@ -24,6 +24,7 @@ PProf-Web can be deployed in this area and expose only one web endpoint to proxy
 - [x] Support goroutine profile
 - [ ] Improve web UI
 - [x] Proxy for all pprof endpoint
+- [x] Support sub folder using `-b` param
 
 # Usage
 

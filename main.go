@@ -15,6 +15,7 @@ var (
 func main() {
 	flag.StringVar(&tmpPath, "t", tmpPath, "")
 	flag.StringVar(&listenAddress, "l", listenAddress, "")
+	flag.StringVar(&basePath, "b", basePath, "")
 	flag.Parse()
 
 	if tmpPath[len(tmpPath)-1] != '/' {
@@ -27,6 +28,15 @@ func main() {
 		}
 	} else if err != nil {
 		panic(err)
+	}
+	if len(basePath) == 0 {
+		basePath = "/"
+	}
+	if basePath[0] != '/' {
+		basePath = "/" + basePath
+	}
+	if basePath[len(basePath)-1] != '/' {
+		basePath += "/"
 	}
 
 	log.Printf("start http server at %s using tmp dir %s", listenAddress, tmpPath)

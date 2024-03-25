@@ -88,7 +88,7 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 			_, _ = rsp.Write([]byte("fetch failed.\n" + err.Error()))
 			return
 		}
-		http.Redirect(rsp, req, "./"+profileId+"/", http.StatusFound)
+		http.Redirect(rsp, req, buildPathFromBase("./"+profileId+"/"), http.StatusFound)
 		return
 	}
 
@@ -136,7 +136,8 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 }
 
 func handleProfile(rsp http.ResponseWriter, req *http.Request, profileId string, pathHandle map[string]http.Handler) {
-	realPath := req.URL.Path[len(profileId)+1:]
+	absPath := getPathFromBase(req.URL.Path)
+	realPath := absPath[len(profileId)+1:]
 	if realPath == "" {
 		req.URL.Path += "/"
 		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)

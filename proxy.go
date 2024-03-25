@@ -33,16 +33,17 @@ var (
 
 // handleProxy request like /proxy/1.2.3.4/8000/debug/pprof
 func handleProxy(rsp http.ResponseWriter, req *http.Request) {
-	pathParts := strings.Split(req.URL.Path, "/")
+	absPath := getPathFromBase(req.URL.Path)
+	pathParts := strings.Split(absPath, "/")
 	var ipStr, portStr string
 	if len(pathParts) < 4 {
-		log.Println("missing proxy endpoint: ", req.URL.Path)
+		log.Println("missing proxy endpoint: ", absPath)
 		rsp.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	ipStr = pathParts[2]
 	portStr = pathParts[3]
-	endpoint := req.URL.Path[8+len(ipStr)+len(portStr):]
+	endpoint := absPath[8+len(ipStr)+len(portStr):]
 	if endpoint == "" || endpoint == "/" {
 		req.URL.Path += "/debug/pprof/"
 		http.Redirect(rsp, req, req.URL.String(), http.StatusFound)
