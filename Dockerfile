@@ -5,7 +5,7 @@ COPY . .
 ENV CGO_ENABLED=0
 RUN go build && chmod +x pprof-web
 
-FROM alpine:latest
+FROM alpine:3.18
 
 RUN apk add --no-cache graphviz
 COPY --from=Builder /pprof-web/pprof-web /

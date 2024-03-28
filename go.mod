@@ -3,7 +3,7 @@ module github.com/wzxjohn/pprof-web
 go 1.22
 
 require (
-	github.com/google/pprof v0.0.0-20220729232143-a41b82acbcb1
+	github.com/google/pprof v0.0.0-20230811205829-9131a7e9cc17
 	github.com/google/uuid v1.6.0
 )
 
