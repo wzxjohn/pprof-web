@@ -49,7 +49,7 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 
 		var port int
 		port, err := strconv.Atoi(portStr)
-		if err != nil {
+		if err != nil || port < 1 || port > 65535 {
 			rsp.WriteHeader(http.StatusBadRequest)
 			_, _ = rsp.Write([]byte("invalid port"))
 			return
@@ -64,6 +64,9 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 				rsp.WriteHeader(http.StatusBadRequest)
 				_, _ = rsp.Write([]byte("invalid seconds"))
 				return
+			}
+			if seconds < 1 {
+				seconds = 1
 			}
 			if seconds > 60 {
 				seconds = 60
@@ -80,6 +83,7 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 		default:
 			rsp.WriteHeader(http.StatusBadRequest)
 			_, _ = rsp.Write([]byte("wrong profile type"))
+			return
 		}
 		profileId := newProfileId(ip, port, profileType)
 		err = newProfile(profileId, ip, port, seconds, profileType)
@@ -253,6 +257,7 @@ func fetchProfile(profileId, ip string, port, seconds int, profileType ProfileTy
 	if err != nil {
 		return "", err
 	}
+	defer f.Close()
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
 		return "", err

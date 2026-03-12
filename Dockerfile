@@ -1,9 +1,9 @@
-FROM golang:latest as Builder
+FROM golang:1.25 as Builder
 
 WORKDIR /pprof-web
 COPY . .
 ENV CGO_ENABLED=0
-RUN go build && chmod +x pprof-web
+RUN go build -ldflags="-s -w" && chmod +x pprof-web
 
 FROM alpine:3.23
 

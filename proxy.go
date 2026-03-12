@@ -83,7 +83,9 @@ func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 		}
 		if timeout > 60 {
 			timeout = 65
-			req.URL.Query().Set(secondsQueryParam, "60")
+			q := req.URL.Query()
+			q.Set(secondsQueryParam, "60")
+			req.URL.RawQuery = q.Encode()
 		} else {
 			timeout += 5
 		}
@@ -115,7 +117,7 @@ func doProxy(ip, port, endpoint string, timeout time.Duration, rsp http.Response
 
 	for k, vs := range proxyRsp.Header {
 		for _, v := range vs {
-			rsp.Header().Set(k, v)
+			rsp.Header().Add(k, v)
 		}
 	}
 	rsp.WriteHeader(proxyRsp.StatusCode)

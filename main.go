@@ -39,10 +39,10 @@ func main() {
 	if _, err := os.Stat(tmpPath); os.IsNotExist(err) {
 		err = os.MkdirAll(tmpPath, 0755)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	} else if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if len(basePath) == 0 {
 		basePath = "/"
@@ -58,6 +58,6 @@ func main() {
 
 	err := http.ListenAndServe(listenAddress, &webHandler{})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
