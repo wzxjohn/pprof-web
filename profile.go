@@ -182,6 +182,17 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
             </form>
         </div>
 
+        <!-- History -->
+        <div id="historySection" class="mt-4 hidden">
+            <div class="bg-slate-800 rounded-xl border border-slate-700 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs font-medium text-slate-400">Recent Profiles</h2>
+                    <button onclick="clearHistory()" class="text-xs text-slate-500 hover:text-red-400 transition">Clear all</button>
+                </div>
+                <div id="historyList" class="space-y-1.5"></div>
+            </div>
+        </div>
+
         <!-- Footer -->
         <p class="text-center text-slate-600 text-xs mt-6">
             Connects to the target's /debug/pprof endpoint to fetch the profile.
@@ -189,7 +200,100 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
     </div>
 
     <script>
+    var STORAGE_KEY = "pprof-web-history";
+    var MAX_HISTORY = 20;
+
+    function getHistory() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch(e) {
+            return [];
+        }
+    }
+
+    function saveHistory(list) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function addToHistory(ip, port, seconds, type) {
+        var list = getHistory();
+        var key = ip + ":" + port + ":" + type + ":" + seconds;
+        list = list.filter(function(item) {
+            return (item.ip + ":" + item.port + ":" + item.type + ":" + item.seconds) !== key;
+        });
+        list.unshift({ip: ip, port: port, seconds: seconds, type: type, ts: Date.now()});
+        if (list.length > MAX_HISTORY) list = list.slice(0, MAX_HISTORY);
+        saveHistory(list);
+    }
+
+    function removeFromHistory(index) {
+        var list = getHistory();
+        list.splice(index, 1);
+        saveHistory(list);
+        renderHistory();
+    }
+
+    function clearHistory() {
+        saveHistory([]);
+        renderHistory();
+    }
+
+    function pickHistory(index) {
+        var list = getHistory();
+        var item = list[index];
+        if (!item) return;
+        document.getElementById("ip").value = item.ip;
+        document.getElementById("port").value = item.port;
+        document.getElementById("seconds").value = item.seconds || "";
+        var radios = document.querySelectorAll("input[name=type]");
+        for (var i = 0; i < radios.length; i++) {
+            radios[i].checked = (radios[i].value === item.type);
+        }
+    }
+
+    function typeLabel(t) {
+        if (t === "cpu") return "CPU";
+        if (t === "heap") return "Heap";
+        if (t === "goroutine") return "Goroutine";
+        return t;
+    }
+
+    function renderHistory() {
+        var list = getHistory();
+        var section = document.getElementById("historySection");
+        var container = document.getElementById("historyList");
+        if (list.length === 0) {
+            section.classList.add("hidden");
+            return;
+        }
+        section.classList.remove("hidden");
+        var html = "";
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            var sec = item.seconds ? item.seconds + "s" : "30s";
+            html += "<div class=\"flex items-center gap-2 group\">"
+                + "<button type=\"button\" onclick=\"pickHistory(" + i + ")\" "
+                + "class=\"flex-1 text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/50 transition text-sm\">"
+                + "<span class=\"text-white\">" + item.ip + ":" + item.port + "</span>"
+                + "<span class=\"ml-2 text-slate-500\">" + typeLabel(item.type) + "</span>"
+                + "<span class=\"ml-1 text-slate-600\">" + sec + "</span>"
+                + "</button>"
+                + "<button type=\"button\" onclick=\"removeFromHistory(" + i + ")\" "
+                + "class=\"p-1.5 rounded text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition\" title=\"Remove\">"
+                + "<svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\">"
+                + "<path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 18L18 6M6 6l12 12\"/>"
+                + "</svg></button></div>";
+        }
+        container.innerHTML = html;
+    }
+
     function handleSubmit() {
+        var ip = document.getElementById("ip").value;
+        var port = document.getElementById("port").value;
+        var seconds = document.getElementById("seconds").value;
+        var type = document.querySelector("input[name=type]:checked").value;
+        addToHistory(ip, port, seconds, type);
+
         var btn = document.getElementById("submitBtn");
         var txt = document.getElementById("btnText");
         var spin = document.getElementById("spinner");
@@ -198,6 +302,8 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
         spin.classList.remove("hidden");
         return true;
     }
+
+    renderHistory();
     </script>
 </body>
 </html>`))
