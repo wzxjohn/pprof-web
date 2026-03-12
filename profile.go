@@ -101,42 +101,104 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Form</title>
+    <title>PProf-Web</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-8">
-    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <form>
-            <div class="mb-4">
-                <label for="ip" class="block text-sm font-medium text-gray-700">IP:</label>
-                <input type="text" id="ip" name="ip" placeholder="10.0.0.1" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-lg">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center mb-4">
+                <svg class="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605"/>
+                </svg>
             </div>
-            <div class="mb-4">
-                <label for="port" class="block text-sm font-medium text-gray-700">Port:</label>
-                <input type="number" id="port" name="port" placeholder="8000" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-            <div class="mb-4">
-                <label for="seconds" class="block text-sm font-medium text-gray-700">Seconds:</label>
-                <input type="number" id="seconds" name="seconds" placeholder="30" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-            <fieldset class="mb-4">
-                <legend class="block text-sm font-medium text-gray-700 mb-2">Select profile type:</legend>
-                <div class="flex items-center mb-4">
-                    <input id="cpu" name="type" type="radio" value="cpu" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
-                    <label for="cpu" class="ml-2 block text-sm font-medium text-gray-700">CPU</label>
+            <h1 class="text-2xl font-bold text-white">PProf-Web</h1>
+            <p class="text-slate-400 mt-1 text-sm">Fetch and visualize Go pprof profiles through a web interface</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-6">
+            <form id="profileForm" onsubmit="return handleSubmit()">
+                <!-- IP and Port row -->
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="col-span-2">
+                        <label for="ip" class="block text-xs font-medium text-slate-400 mb-1.5">IP Address</label>
+                        <input type="text" id="ip" name="ip" placeholder="10.0.0.1" required
+                            class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition">
+                    </div>
+                    <div>
+                        <label for="port" class="block text-xs font-medium text-slate-400 mb-1.5">Port</label>
+                        <input type="number" id="port" name="port" placeholder="8000" required min="1" max="65535"
+                            class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition">
+                    </div>
                 </div>
-                <div class="flex items-center mb-4">
-                    <input id="heap" name="type" type="radio" value="heap" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                    <label for="heap" class="ml-2 block text-sm font-medium text-gray-700">heap</label>
+
+                <!-- Seconds -->
+                <div class="mb-5">
+                    <label for="seconds" class="block text-xs font-medium text-slate-400 mb-1.5">Duration (seconds)</label>
+                    <input type="number" id="seconds" name="seconds" placeholder="30" min="1" max="60"
+                        class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition">
+                    <p class="text-slate-500 text-xs mt-1">Used for CPU profiles. Max 60 seconds.</p>
                 </div>
-                <div class="flex items-center mb-4">
-                    <input id="goroutine" name="type" type="radio" value="goroutine" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                    <label for="goroutine" class="ml-2 block text-sm font-medium text-gray-700">goroutine</label>
-                </div>
-            </fieldset>
-            <button type="submit" class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Profile!</button>
-        </form>
+
+                <!-- Profile Type Cards -->
+                <fieldset class="mb-5">
+                    <legend class="block text-xs font-medium text-slate-400 mb-2">Profile Type</legend>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="type" value="cpu" class="peer sr-only" checked>
+                            <div class="p-3 rounded-lg border border-slate-600 bg-slate-900 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 hover:border-slate-500 transition">
+                                <div class="text-sm font-semibold text-white">CPU</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Function time spent</div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="type" value="heap" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-600 bg-slate-900 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 hover:border-slate-500 transition">
+                                <div class="text-sm font-semibold text-white">Heap</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Memory allocations</div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="type" value="goroutine" class="peer sr-only">
+                            <div class="p-3 rounded-lg border border-slate-600 bg-slate-900 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 hover:border-slate-500 transition">
+                                <div class="text-sm font-semibold text-white">Goroutine</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Stack traces</div>
+                            </div>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <!-- Submit -->
+                <button type="submit" id="submitBtn"
+                    class="w-full px-4 py-2.5 text-sm font-medium text-white bg-cyan-600 rounded-lg hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <span id="btnText">Fetch Profile</span>
+                    <svg id="spinner" class="hidden animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-slate-600 text-xs mt-6">
+            Connects to the target's /debug/pprof endpoint to fetch the profile.
+        </p>
     </div>
+
+    <script>
+    function handleSubmit() {
+        var btn = document.getElementById("submitBtn");
+        var txt = document.getElementById("btnText");
+        var spin = document.getElementById("spinner");
+        btn.disabled = true;
+        txt.textContent = "Fetching profile...";
+        spin.classList.remove("hidden");
+        return true;
+    }
+    </script>
 </body>
 </html>`))
 	return
