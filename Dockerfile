@@ -1,4 +1,4 @@
-FROM golang:1.25 as Builder
+FROM golang:1.26 as Builder
 
 WORKDIR /pprof-web
 COPY . .
