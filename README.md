@@ -118,9 +118,9 @@ The proxy endpoint (`/proxy/`) only allows requests to the standard Go pprof pat
 ## Roadmap
 
 - [ ] Auto-delete inactive profiles
-- [ ] Improved logging
+- [X] Improved logging
 - [ ] Unit tests
-- [ ] Enhanced web UI
+- [X] Enhanced web UI
 
 ## Stargazers over time
 

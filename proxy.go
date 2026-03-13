@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"strconv"
@@ -37,7 +37,7 @@ func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 	pathParts := strings.Split(absPath, "/")
 	var ipStr, portStr string
 	if len(pathParts) < 4 {
-		log.Println("missing proxy endpoint: ", absPath)
+		slog.Warn("proxy request missing path parts", "path", absPath)
 		rsp.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -55,19 +55,19 @@ func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if _, ok := allowedEndpoint[endpoint]; !ok {
-		log.Println("endpoint not allowed: ", endpoint)
+		slog.Warn("proxy endpoint not allowed", "endpoint", endpoint, "ip", ipStr, "port", portStr)
 		rsp.WriteHeader(http.StatusForbidden)
 		return
 	}
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
-		log.Println("invalid target ip: ", ipStr)
+		slog.Warn("proxy request with invalid ip", "ip", ipStr)
 		rsp.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	_, err := strconv.Atoi(portStr)
 	if err != nil {
-		log.Println("invalid target port: ", portStr)
+		slog.Warn("proxy request with invalid port", "port", portStr)
 		rsp.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -77,7 +77,7 @@ func handleProxy(rsp http.ResponseWriter, req *http.Request) {
 	if secondsStr != "" {
 		timeout, err = strconv.Atoi(secondsStr)
 		if err != nil {
-			log.Println("invalid seconds param: ", secondsStr)
+			slog.Warn("proxy request with invalid seconds param", "seconds", secondsStr)
 			rsp.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -101,7 +101,7 @@ func doProxy(ip, port, endpoint string, timeout time.Duration, rsp http.Response
 	targetURL := fmt.Sprintf("http://%s:%s%s?%s", ip, port, endpoint, req.URL.RawQuery)
 	proxyReq, err := http.NewRequest(http.MethodGet, targetURL, nil)
 	if err != nil {
-		log.Println("error while new http request: ", err)
+		slog.Error("failed to create proxy request", "url", targetURL, "error", err)
 		rsp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -109,7 +109,7 @@ func doProxy(ip, port, endpoint string, timeout time.Duration, rsp http.Response
 	proxyReq.Header = req.Header.Clone()
 	proxyRsp, err := client.Do(proxyReq)
 	if err != nil {
-		log.Println("error while fetch target: ", err)
+		slog.Error("failed to fetch from target", "url", targetURL, "error", err)
 		rsp.WriteHeader(http.StatusBadGateway)
 		return
 	}
@@ -124,7 +124,7 @@ func doProxy(ip, port, endpoint string, timeout time.Duration, rsp http.Response
 
 	_, err = copyResponse(rsp, proxyRsp.Body)
 	if err != nil {
-		log.Println("write response failed: ", err)
+		slog.Error("failed to write proxy response", "url", targetURL, "error", err)
 		return
 	}
 }
@@ -138,7 +138,7 @@ func copyResponse(dst io.Writer, src io.Reader) (int64, error) {
 	for {
 		nr, rerr := src.Read(buf)
 		if rerr != nil && rerr != io.EOF && rerr != context.Canceled {
-			log.Println("ReverseProxy read error during body copy: ", rerr)
+			slog.Warn("read error during proxy body copy", "error", rerr)
 		}
 		if nr > 0 {
 			nw, werr := dst.Write(buf[:nr])

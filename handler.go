@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -11,6 +11,7 @@ type webHandler struct {
 
 // ServeHTTP 用于HTTP服务
 func (p *webHandler) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
+	slog.Debug("incoming request", "method", req.Method, "path", req.URL.Path, "remote", req.RemoteAddr)
 	if len(req.URL.Path) < len(basePath) {
 		rsp.Header()
 		http.Redirect(rsp, req, buildPathFromBase("/"), http.StatusFound)
@@ -54,7 +55,7 @@ func (p *webHandler) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
 			return
 		}
 		if pathHandleMap, ok = profileIdPathHandleMap.Load(profileId); !ok {
-			log.Println("handle still missing after load profile ", profileId)
+			slog.Error("handle still missing after load profile", "profileId", profileId)
 			rsp.WriteHeader(http.StatusNotFound)
 			return
 		}

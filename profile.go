@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -86,8 +86,10 @@ func handleProfileHome(rsp http.ResponseWriter, req *http.Request) {
 			return
 		}
 		profileId := newProfileId(ip, port, profileType)
+		slog.Info("fetching profile", "profileId", profileId, "ip", ip, "port", port, "type", profileTypeStr, "seconds", seconds)
 		err = newProfile(profileId, ip, port, seconds, profileType)
 		if err != nil {
+			slog.Error("profile fetch failed", "profileId", profileId, "ip", ip, "port", port, "error", err)
 			rsp.WriteHeader(http.StatusInternalServerError)
 			_, _ = rsp.Write([]byte("fetch failed.\n" + err.Error()))
 			return
@@ -328,7 +330,7 @@ func handleProfile(rsp http.ResponseWriter, req *http.Request, profileId string,
 
 func newProfile(profileId, ip string, port, seconds int, profileType ProfileType) error {
 	_id := nextId()
-	log.Println("profile ", profileId, "assigned id ", _id)
+	slog.Debug("new profile assigned internal id", "profileId", profileId, "internalId", _id)
 	idProfileIdMap.Store(_id, profileId)
 
 	profilePath, err := fetchProfile(profileId, ip, port, seconds, profileType)
@@ -347,12 +349,12 @@ func newProfile(profileId, ip string, port, seconds int, profileType ProfileType
 func tryLoadProfile(profileId string) bool {
 	ip, port, realId := parseProfileId(profileId)
 	if ip == "" || port == 0 || realId == "" {
-		log.Println("wrong profile id: ", profileId)
+		slog.Warn("invalid profile id format", "profileId", profileId)
 		return false
 	}
 
 	_id := nextId()
-	log.Println("profile ", profileId, "assigned id ", _id)
+	slog.Debug("loading profile assigned internal id", "profileId", profileId, "internalId", _id)
 	idProfileIdMap.Store(_id, profileId)
 
 	profilePath := getProfilePath(profileId)
@@ -411,12 +413,12 @@ func fetchProfile(profileId, ip string, port, seconds int, profileType ProfileTy
 	}
 	resp, err := client.Get(url)
 	if err != nil {
-		log.Println("http fetch: ", err)
+		slog.Error("failed to fetch profile from target", "url", url, "error", err)
 		return "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		log.Println("http fetch get status: ", resp.StatusCode)
+		slog.Error("unexpected status from target", "url", url, "status", resp.StatusCode)
 		return "", fmt.Errorf("wrong http status: %d", resp.StatusCode)
 	}
 
@@ -430,7 +432,7 @@ func fetchProfile(profileId, ip string, port, seconds int, profileType ProfileTy
 	if err != nil {
 		return "", err
 	}
-	log.Println("save profile in ", profilePath)
+	slog.Info("profile saved", "profileId", profileId, "path", profilePath)
 	return profilePath, nil
 }
 
@@ -439,10 +441,10 @@ func getProfilePath(profileId string) string {
 }
 
 func pprofHTTPServer(args *driver.HTTPServerArgs) error {
-	log.Println("start http server for ", args.Port)
+	slog.Debug("pprof handler registration", "port", args.Port)
 	profileId, ok := idProfileIdMap.Load(args.Port)
 	if ok {
-		log.Println("match id ", args.Port, "to profile id ", profileId)
+		slog.Debug("mapped internal id to profile", "internalId", args.Port, "profileId", profileId)
 		profileIdPathHandleMap.Store(profileId.(string), args.Handlers)
 	}
 	return nil
@@ -470,7 +472,7 @@ func parseProfileId(profileId string) (ip string, port int, id string) {
 		var err error
 		port, err = strconv.Atoi(idParts[1])
 		if err != nil {
-			log.Println("wrong profile id format: ", profileId)
+			slog.Warn("failed to parse profile id", "profileId", profileId, "error", err)
 			return
 		}
 		ip = idParts[0]
